@@ -1,0 +1,99 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+
+<br />
+<br />
+<h5>@info</h5>
+<br />
+<br />
+<h5>To duplicate bug: login, logout twice.</h5>
+<br />
+<br />
+
+
+
+<form @formname="HomePage" method="post" @onsubmit="HandleSubmit">
+    <AntiforgeryToken />
+
+    <input value="@UserName" name="UserName" />
+    <br />
+    <br />
+
+    <input value="@UserPassword" name="UserPassword" />
+    <br />
+    <br />
+
+    <button name="btnLogin" value="submitted" type="submit">Login</button>  &nbsp;&nbsp;
+    <button name="btnLogout" value="submitted" type="submit">Logout</button>
+    <br />
+</form>
+
+
+
+@code {
+
+    @using Microsoft.AspNetCore.Components;
+    @using System.Security.Claims;
+    @using Microsoft.AspNetCore.Authentication.Cookies;
+    @using Microsoft.AspNetCore.Authentication;
+
+    [Inject]
+    public IHttpContextAccessor? HttpContextAccessor { get; set; }
+
+    protected string info = "info";
+
+    [SupplyParameterFromForm] public string? UserName { get; set; } = "john";
+    [SupplyParameterFromForm] public string? UserPassword { get; set; } = "pw99";
+    [SupplyParameterFromForm] public string? btnLogin { get; set; }
+    [SupplyParameterFromForm] public string? btnLogout { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+
+    protected async Task HandleSubmit()
+    {
+        if (!string.IsNullOrEmpty(btnLogin))
+        {
+            await LoginUser();
+        }
+
+        if (!string.IsNullOrEmpty(btnLogout))
+        {
+            await LogoutUser();
+        }
+    }
+
+
+    protected async Task LoginUser()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, UserName)
+            };
+
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+        info = "User is logged in.";
+    }
+
+
+    protected async Task LogoutUser()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        info = "User is logged out.";
+    }
+
+
+
+
+}
